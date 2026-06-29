@@ -1,0 +1,47 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: analytics-worker
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:swiftpay_analytics}
+    username: ${DB_USER:swiftpay}
+    password: ${DB_PASS:swiftpay123}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    consumer:
+      group-id: analytics-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.swiftpay.*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.swiftpay.analytics.dto.PaymentResultEvent
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+swiftpay:
+  kafka:
+    topics:
+      payment-completed: payment.completed
+
+logging:
+  level:
+    com.swiftpay: INFO
